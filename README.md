@@ -53,3 +53,17 @@ npx prisma db push
 ```bash
 node server.js
 ```
+
+## Resolving merge conflicts (every time)
+
+Use this helper before opening or updating a PR to catch conflicts early:
+
+```bash
+scripts/resolve-conflicts.sh main
+```
+
+What it does:
+- verifies your working tree is clean,
+- fetches latest remote branches,
+- rebases your current branch on top of `origin/main`,
+- if conflicts occur, prints conflicted files and exact next commands (`git add ...`, `git rebase --continue`, `git rebase --abort`).
