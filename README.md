@@ -34,3 +34,17 @@ Then open `http://localhost:8000`.
 3. Add event ingestion from tasks (calls, emails, lead updates, status changes).
 4. Integrate AI agent for reminders and weekly summaries.
 5. Launch privacy-filtered public dashboard endpoint.
+
+## Backend quick setup (Node.js + Express + Prisma + PostgreSQL)
+
+```bash
+npm init -y
+npm install express pg @prisma/client@6.7.0
+npm install -D prisma@6.7.0
+npx prisma init --datasource-provider postgresql
+# replace prisma/schema.prisma with the schema in this repository
+# set DATABASE_URL in .env, for example:
+# DATABASE_URL="postgresql://postgres:postgres@localhost:5432/placement_db?schema=public"
+npx prisma generate
+npx prisma db push
+```
