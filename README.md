@@ -39,12 +39,35 @@ Then open `http://localhost:8000`.
 
 ```bash
 npm init -y
+npm install express socket.io telegraf pg @prisma/client@6.7.0
 npm install express pg @prisma/client@6.7.0
 npm install -D prisma@6.7.0
 npx prisma init --datasource-provider postgresql
 # replace prisma/schema.prisma with the schema in this repository
 # set DATABASE_URL in .env, for example:
 # DATABASE_URL="postgresql://postgres:postgres@localhost:5432/placement_db?schema=public"
+# TELEGRAM_BOT_TOKEN="<your-bot-token>"
+npx prisma generate
+npx prisma db push
+```
+
+```bash
+node server.js
+```
+
+## Resolving merge conflicts (every time)
+
+Use this helper before opening or updating a PR to catch conflicts early:
+
+```bash
+scripts/resolve-conflicts.sh main
+```
+
+What it does:
+- verifies your working tree is clean,
+- fetches latest remote branches,
+- rebases your current branch on top of `origin/main`,
+- if conflicts occur, prints conflicted files and exact next commands (`git add ...`, `git rebase --continue`, `git rebase --abort`).
 npx prisma generate
 npx prisma db push
 ```

@@ -20,6 +20,13 @@ function normalizeIncomingText(text) {
   return normalized;
 }
 
+function shouldQueryAgent(content) {
+  const trimmed = String(content || '').trim();
+  const hasMention = /(^|\s)@agent\b/i.test(trimmed);
+  const directAgentQuery = /^\/?agent\b[:\s,-]?/i.test(trimmed);
+  return hasMention || directAgentQuery;
+}
+
 function getDmRoomNameForUser(userId) {
   return `dm-user-${userId}`;
 }
@@ -56,6 +63,11 @@ async function findOrCreateDmRoom(prisma, userId) {
   });
 }
 
+function defaultAskAgent() {
+  return 'This is an AI response';
+}
+
+function initializeTelegramBot({ botToken, prisma, io, getSocketRoomName, askAgent = defaultAskAgent, logger = console }) {
 function initializeTelegramBot({ botToken, prisma, io, getSocketRoomName, logger = console }) {
   if (!botToken) {
     logger.warn('TELEGRAM_BOT_TOKEN is not set. Telegram integration is disabled.');
@@ -92,6 +104,40 @@ function initializeTelegramBot({ botToken, prisma, io, getSocketRoomName, logger
       }
 
       const dmRoom = await findOrCreateDmRoom(prisma, user.id);
+      const socketRoomName = getSocketRoomName(ChatRoomType.DM, dmRoom.id);
+
+      if (shouldQueryAgent(content)) {
+        const agentReply = await askAgent(content);
+        const savedAgentMessage = await prisma.message.create({
+          data: {
+            content: agentReply,
+            senderId: user.id,
+            roomId: dmRoom.id,
+            isAgentGenerated: true
+          },
+          select: {
+            id: true,
+            content: true,
+            senderId: true,
+            roomId: true,
+            timestamp: true,
+            isAgentGenerated: true
+          }
+        });
+
+        const agentMessage = {
+          ...savedAgentMessage,
+          senderName: 'AI Agent',
+          roomType: ChatRoomType.DM,
+          source: 'telegram'
+        };
+
+        io.to(socketRoomName).emit('newMessage', agentMessage);
+        io.emit('telegramMessage', agentMessage);
+
+        await ctx.reply(agentReply);
+        return;
+      }
 
       const savedMessage = await prisma.message.create({
         data: {

@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const { PrismaClient, ChatRoomType } = require('@prisma/client');
+const { initializeTelegramBot } = require('./telegramBot');
 
 const app = express();
 const server = http.createServer(app);
@@ -14,12 +15,27 @@ const io = new Server(server, {
 
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
 const ROOM_PREFIX = {
   [ChatRoomType.ADMIN_PLACECOM]: 'admin-placecom',
   [ChatRoomType.PLACECOM_ONLY]: 'placecom-only',
   [ChatRoomType.DM]: 'dm'
 };
+
+async function askAgent(_query) {
+  return 'This is an AI response';
+}
+
+function shouldQueryAgent(content, roomType) {
+  if (typeof content !== 'string') return false;
+
+  const trimmed = content.trim();
+  const hasMention = /(^|\s)@agent\b/i.test(trimmed);
+  const dmAgentQuery = roomType === ChatRoomType.DM && /^\/?agent\b[:\s,-]?/i.test(trimmed);
+
+  return hasMention || dmAgentQuery;
+}
 
 function getSocketRoomName(roomType, roomId) {
   const prefix = ROOM_PREFIX[roomType];
@@ -159,6 +175,43 @@ io.on('connection', (socket) => {
         throw new Error('Sender not found.');
       }
 
+      const socketRoomName = getSocketRoomName(roomType, roomId);
+
+      if (shouldQueryAgent(content, roomType)) {
+        const agentReply = await askAgent(content);
+
+        const savedAgentMessage = await prisma.message.create({
+          data: {
+            content: agentReply,
+            senderId,
+            roomId,
+            isAgentGenerated: true
+          },
+          select: {
+            id: true,
+            content: true,
+            senderId: true,
+            roomId: true,
+            timestamp: true,
+            isAgentGenerated: true
+          }
+        });
+
+        const agentMessageEvent = {
+          ...savedAgentMessage,
+          senderName: 'AI Agent',
+          roomType
+        };
+
+        io.to(socketRoomName).emit('newMessage', agentMessageEvent);
+
+        if (typeof ack === 'function') {
+          ack({ success: true, interceptedByAgent: true, message: agentMessageEvent });
+        }
+
+        return;
+      }
+
       const savedMessage = await prisma.message.create({
         data: {
           content,
@@ -208,6 +261,21 @@ io.on('connection', (socket) => {
   });
 });
 
+let telegramBot = null;
+
+async function start() {
+  try {
+    await prisma.$connect();
+
+    telegramBot = initializeTelegramBot({
+      botToken: TELEGRAM_BOT_TOKEN,
+      prisma,
+      io,
+      getSocketRoomName,
+      askAgent,
+      logger: console
+    });
+
 async function start() {
   try {
     await prisma.$connect();
@@ -225,6 +293,13 @@ start();
 async function gracefulShutdown(signal) {
   console.log(`Received ${signal}. Shutting down gracefully...`);
   try {
+    if (telegramBot) {
+      telegramBot.stop(signal);
+    }
+
+    await prisma.$disconnect();
+  } catch (error) {
+    console.error('Error during shutdown:', error);
     await prisma.$disconnect();
   } catch (error) {
     console.error('Error disconnecting Prisma client:', error);
