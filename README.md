@@ -39,7 +39,7 @@ Then open `http://localhost:8000`.
 
 ```bash
 npm init -y
-npm install express socket.io pg @prisma/client@6.7.0
+npm install express pg @prisma/client@6.7.0
 npm install -D prisma@6.7.0
 npx prisma init --datasource-provider postgresql
 # replace prisma/schema.prisma with the schema in this repository
@@ -47,8 +47,4 @@ npx prisma init --datasource-provider postgresql
 # DATABASE_URL="postgresql://postgres:postgres@localhost:5432/placement_db?schema=public"
 npx prisma generate
 npx prisma db push
-```
-
-```bash
-node server.js
 ```
