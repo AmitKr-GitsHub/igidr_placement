@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  PLACECOM
+  STUDENT
+}
+
+enum ChatRoomType {
+  ADMIN_PLACECOM
+  PLACECOM_ONLY
+  DM
+}
+
+model User {
+  id         Int       @id @default(autoincrement())
+  name       String
+  telegramId String    @unique
+  role       UserRole
+  messages   Message[]
+
+  @@map("users")
+}
+
+model ChatRoom {
+  id       Int          @id @default(autoincrement())
+  name     String
+  type     ChatRoomType
+  messages Message[]
+
+  @@map("chat_rooms")
+}
+
+model Message {
+  id               Int      @id @default(autoincrement())
+  content          String
+  senderId         Int
+  roomId           Int
+  timestamp        DateTime @default(now())
+  isAgentGenerated Boolean  @default(false)
+
+  sender User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  room   ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([senderId])
+  @@index([roomId])
+  @@index([timestamp])
+  @@map("messages")
+}
