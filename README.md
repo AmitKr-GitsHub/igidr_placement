@@ -18,6 +18,114 @@ At the same time, publish **privacy-safe public metrics** that reflect overall c
 - `index.html` – product overview and dashboard mockup.
 - `styles.css` – clean responsive styling.
 - `app.js` – sample metric calculations and rendered public dashboard cards.
+- `server.js` – Express + Socket.IO realtime backend.
+- `telegramBot.js` – Telegram bridge for DM sync and agent interception.
+- `prisma/schema.prisma` – PostgreSQL schema for users/chat rooms/messages.
+- `src/ChatInterface.jsx` – basic React chat interface.
+- `PRD.md` – detailed product and implementation blueprint.
+
+## Run the system locally (end-to-end)
+
+### 1) Prerequisites
+
+- Node.js 20+
+- npm 10+
+- PostgreSQL 14+ (local or remote)
+- (Optional) Telegram bot token from BotFather
+
+### 2) Install dependencies
+
+```bash
+npm install
+```
+
+If this is a fresh clone and lockfile is not present, you can install explicitly:
+
+```bash
+npm install express socket.io telegraf pg @prisma/client@6.7.0 socket.io-client react
+npm install -D prisma@6.7.0
+```
+
+### 3) Configure environment variables
+
+Create `.env` in the project root:
+
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/placement_db?schema=public"
+TELEGRAM_BOT_TOKEN="<your-bot-token>"
+PORT=3000
+```
+
+> If you are not testing Telegram, keep `TELEGRAM_BOT_TOKEN` empty or omit it.
+
+### 4) Prepare database
+
+```bash
+npx prisma generate --schema prisma/schema.prisma
+npx prisma db push --schema prisma/schema.prisma
+```
+
+### 5) Start backend server
+
+```bash
+npm start
+```
+
+The backend health endpoint will be available at:
+
+```text
+http://localhost:3000/health
+```
+
+### 6) Start static dashboard preview
+
+In a second terminal:
+
+```bash
+python3 -m http.server 8000
+```
+
+Open:
+
+```text
+http://localhost:8000
+```
+
+### 7) Use React chat component
+
+Import `src/ChatInterface.jsx` into your React app and render it:
+
+```jsx
+import ChatInterface from "./src/ChatInterface";
+
+export default function App() {
+  return <ChatInterface serverUrl="http://localhost:3000" senderId={1} />;
+}
+```
+
+## Quick local checks
+
+```bash
+node --check server.js
+node --check telegramBot.js
+node --check app.js
+DATABASE_URL="postgresql://user:pass@localhost:5432/db?schema=public" npx prisma validate --schema prisma/schema.prisma
+```
+
+## Resolving merge conflicts (every time)
+
+Use this helper before opening or updating a PR to catch conflicts early:
+
+```bash
+scripts/resolve-conflicts.sh main
+```
+
+What it does:
+
+- verifies your working tree is clean,
+- fetches latest remote branches,
+- rebases your current branch on top of `origin/main`,
+- if conflicts occur, prints conflicted files and exact next commands (`git add ...`, `git rebase --continue`, `git rebase --abort`).
 - `PRD.md` – detailed product and implementation blueprint.
 
 ## Quick start
