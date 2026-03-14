@@ -40,6 +40,7 @@ Then open `http://localhost:8000`.
 ```bash
 npm init -y
 npm install express socket.io telegraf pg @prisma/client@6.7.0
+npm install express pg @prisma/client@6.7.0
 npm install -D prisma@6.7.0
 npx prisma init --datasource-provider postgresql
 # replace prisma/schema.prisma with the schema in this repository
@@ -67,3 +68,6 @@ What it does:
 - fetches latest remote branches,
 - rebases your current branch on top of `origin/main`,
 - if conflicts occur, prints conflicted files and exact next commands (`git add ...`, `git rebase --continue`, `git rebase --abort`).
+npx prisma generate
+npx prisma db push
+```

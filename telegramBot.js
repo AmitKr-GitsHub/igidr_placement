@@ -68,6 +68,7 @@ function defaultAskAgent() {
 }
 
 function initializeTelegramBot({ botToken, prisma, io, getSocketRoomName, askAgent = defaultAskAgent, logger = console }) {
+function initializeTelegramBot({ botToken, prisma, io, getSocketRoomName, logger = console }) {
   if (!botToken) {
     logger.warn('TELEGRAM_BOT_TOKEN is not set. Telegram integration is disabled.');
     return null;
@@ -155,6 +156,7 @@ function initializeTelegramBot({ botToken, prisma, io, getSocketRoomName, askAge
         }
       });
 
+      const socketRoomName = getSocketRoomName(ChatRoomType.DM, dmRoom.id);
       const outgoingMessage = {
         ...savedMessage,
         senderName: user.name,
