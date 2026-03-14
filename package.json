@@ -1,0 +1,29 @@
+{
+  "name": "igidr_placement",
+  "version": "1.0.0",
+  "description": "A starter website concept for tracking placement committee activity with an always-on AI assistant, while sharing only non-sensitive aggregate performance on a public dashboard.",
+  "main": "app.js",
+  "scripts": {
+    "test": "npm run check:js && npm run check:scripts && npm run check:prisma",
+    "start": "node server.js",
+    "check:js": "node --check server.js && node --check telegramBot.js && node --check app.js",
+    "check:prisma": "DATABASE_URL='postgresql://user:pass@localhost:5432/db?schema=public' npx prisma validate --schema prisma/schema.prisma",
+    "check:scripts": "bash -n scripts/resolve-conflicts.sh"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@prisma/client": "^6.7.0",
+    "express": "^5.2.1",
+    "pg": "^8.20.0",
+    "react": "^19.2.4",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
+    "telegraf": "^4.16.3"
+  },
+  "devDependencies": {
+    "prisma": "^6.7.0"
+  }
+}
