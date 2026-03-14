@@ -5,6 +5,7 @@ A starter website concept for tracking placement committee activity with an alwa
 ## Vision
 
 Build a transparent system that helps placement committee members:
+
 - stay accountable,
 - complete assigned work on time,
 - maintain structured records of outreach and outcomes,
@@ -64,10 +65,28 @@ scripts/resolve-conflicts.sh main
 ```
 
 What it does:
+
 - verifies your working tree is clean,
 - fetches latest remote branches,
 - rebases your current branch on top of `origin/main`,
 - if conflicts occur, prints conflicted files and exact next commands (`git add ...`, `git rebase --continue`, `git rebase --abort`).
+
+## React chat interface component
+
+A basic Socket.IO-powered React UI is available at:
+
+- `src/ChatInterface.jsx`
+
+It includes:
+
+- sidebar room selection for `ADMIN_PLACECOM`, `PLACECOM_ONLY`, and `DM`,
+- live message list subscribed to `newMessage`,
+- input and send flow using `sendMessage` socket event.
+
+Install frontend dependencies (in your React app):
+
+```bash
+npm install react socket.io-client
 npx prisma generate
 npx prisma db push
 ```
