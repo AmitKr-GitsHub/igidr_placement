@@ -229,6 +229,7 @@ io.on('connection', (socket) => {
         }
       });
 
+      const socketRoomName = getSocketRoomName(roomType, roomId);
       const messageEvent = {
         success: true,
         message: {
@@ -275,6 +276,9 @@ async function start() {
       logger: console
     });
 
+async function start() {
+  try {
+    await prisma.$connect();
     server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
@@ -296,6 +300,9 @@ async function gracefulShutdown(signal) {
     await prisma.$disconnect();
   } catch (error) {
     console.error('Error during shutdown:', error);
+    await prisma.$disconnect();
+  } catch (error) {
+    console.error('Error disconnecting Prisma client:', error);
   } finally {
     server.close(() => {
       process.exit(0);
