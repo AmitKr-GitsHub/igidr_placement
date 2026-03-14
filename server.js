@@ -2,7 +2,6 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const { PrismaClient, ChatRoomType } = require('@prisma/client');
-const { initializeTelegramBot } = require('./telegramBot');
 
 const app = express();
 const server = http.createServer(app);
@@ -15,7 +14,6 @@ const io = new Server(server, {
 
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
 const ROOM_PREFIX = {
   [ChatRoomType.ADMIN_PLACECOM]: 'admin-placecom',
@@ -210,20 +208,9 @@ io.on('connection', (socket) => {
   });
 });
 
-let telegramBot = null;
-
 async function start() {
   try {
     await prisma.$connect();
-
-    telegramBot = initializeTelegramBot({
-      botToken: TELEGRAM_BOT_TOKEN,
-      prisma,
-      io,
-      getSocketRoomName,
-      logger: console
-    });
-
     server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
@@ -238,13 +225,9 @@ start();
 async function gracefulShutdown(signal) {
   console.log(`Received ${signal}. Shutting down gracefully...`);
   try {
-    if (telegramBot) {
-      telegramBot.stop(signal);
-    }
-
     await prisma.$disconnect();
   } catch (error) {
-    console.error('Error during shutdown:', error);
+    console.error('Error disconnecting Prisma client:', error);
   } finally {
     server.close(() => {
       process.exit(0);
